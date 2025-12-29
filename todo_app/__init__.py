@@ -1,0 +1,3 @@
+"""
+Todo application package initialization.
+"""
