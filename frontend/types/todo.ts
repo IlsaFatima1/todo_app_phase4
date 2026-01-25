@@ -18,6 +18,7 @@ export interface TodoApiResponse {
 export interface Todo {
   id: string;              // Unique identifier for each task
   title: string;           // Task description/title
+  description?: string;    // Optional task description
   completed: boolean;      // Status indicating whether the task is completed (default: false)
 }
 

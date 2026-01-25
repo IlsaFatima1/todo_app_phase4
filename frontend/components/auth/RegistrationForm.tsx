@@ -18,11 +18,12 @@ export default function RegistrationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-     if (!name.trim()) {
-    setError('Name is required');
-    return;
-  }
-    // Basic validation
+     // Basic validation
+    if (!name.trim()) {
+      setError('Name is required');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -40,8 +41,8 @@ export default function RegistrationForm() {
       // Use the register function from context
       await register(name, email, password);
 
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to todos page
+      router.push('/todos');
       router.refresh();
     } catch (err: any) {
       setError(err.message || 'An error occurred during registration');

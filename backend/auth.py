@@ -62,10 +62,17 @@ def get_current_user_id(
     Raises:
         HTTPException: If the token is invalid, expired, or user doesn't exist
     """
+    import sys
+    print(f"DEBUG: Authentication function called with credentials: {credentials.scheme if credentials else 'None'}", flush=True)
+
     token = credentials.credentials
+    print(f"DEBUG: Token received: {token[:10] if token else 'None'}...", flush=True)
 
     user_id = verify_token(token)
+    print(f"DEBUG: Token verification result: {user_id}", flush=True)
+
     if user_id is None:
+        print("DEBUG: Token verification failed - raising 401", flush=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -74,13 +81,17 @@ def get_current_user_id(
 
     # Verify that the user exists in the database
     user = session.get(User, user_id)
+    print(f"DEBUG: User lookup result: {user.id if user else 'None'}", flush=True)
+
     if user is None:
+        print(f"DEBUG: User not found in database - raising 401 for user_id: {user_id}", flush=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    print(f"DEBUG: Authentication successful, returning user_id: {user_id}", flush=True)
     return user_id
 
 

@@ -9,10 +9,10 @@ export default function LoginPage() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // Redirect to dashboard if already authenticated
+  // Redirect to todos page if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/todos');
     }
   }, [isAuthenticated, router]);
 

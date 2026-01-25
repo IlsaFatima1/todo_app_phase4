@@ -1,0 +1,12 @@
+
+{
+  "mcpServers": {
+    "context7": {
+      "command": "node",
+      "args": ["./mcp/server.js"],
+      "env": {
+        "API_KEY": " ctx7sk-00bd2980-5af6-4841-b960-0a3d6a66786b"
+      }
+    }
+  }
+}

@@ -23,6 +23,7 @@ def init_db():
     # Import models to register them with SQLModel metadata
     from models import Todo, User
     try:
+        # Create all tables with the current schema (only if they don't exist)
         SQLModel.metadata.create_all(engine)
         print("Database tables created successfully.")
     except SQLAlchemyError as e:

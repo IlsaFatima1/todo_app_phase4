@@ -40,8 +40,8 @@ export default function LoginForm() {
       // Login the user with the received token and user data
       login(data.data.access_token, data.data.user);
 
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to todos page
+      router.push('/todos');
       router.refresh();
     } catch (err: any) {
       setError(err.message || 'An error occurred during login');
