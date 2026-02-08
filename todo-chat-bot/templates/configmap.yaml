@@ -1,0 +1,26 @@
+{{- if .Values.frontend.enabled | default true }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "todo-chat-bot.fullname" . }}-frontend-config
+  labels:
+    {{- include "todo-chat-bot.labels" . | nindent 4 }}
+    app: frontend
+data:
+  NEXT_PUBLIC_API_URL: "http://{{ include "todo-chat-bot.fullname" . }}-backend:{{ .Values.backend.service.port }}"
+{{- end }}
+
+{{- if .Values.backend.enabled | default true }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "todo-chat-bot.fullname" . }}-backend-config
+  labels:
+    {{- include "todo-chat-bot.labels" . | nindent 4 }}
+    app: backend
+data:
+  LOG_LEVEL: "info"
+  DEBUG: "false"
+{{- end }}

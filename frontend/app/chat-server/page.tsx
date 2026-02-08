@@ -1,7 +1,6 @@
 import { initializeConversation } from '@/actions/chatActions';
 import ChatFormServer from '@/components/ChatFormServer';
 import { cookies } from 'next/headers';
-import { getAuthToken } from '@/utils/auth';
 
 interface Message {
   id: string;

@@ -1,0 +1,67 @@
+# Local development values for Todo Chat Bot
+# This file overrides default values for local deployment
+
+frontend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: todo-frontend
+    pullPolicy: Never  # For local development with locally built images
+    tag: "latest"
+  service:
+    type: NodePort  # Use NodePort for easy access in minikube
+    port: 3000
+  containerPort: 3000
+  env:
+    - name: NEXT_PUBLIC_BACKEND_URL
+      value: "http://localhost:30001"  # Adjust port as needed for minikube
+    - name: BACKEND_URL
+      value: "http://todo-chat-bot-backend:7860"
+
+backend:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: todo-backend
+    pullPolicy: Never  # For local development with locally built images
+    tag: "latest"
+  service:
+    type: NodePort  # Use NodePort for easy access in minikube
+    port: 7860
+    nodePort: 30001  # Specific node port for backend
+  containerPort: 7860
+  env:
+    - name: DATABASE_URL
+      value: "sqlite:///./todo_app_local.db"
+    - name: SECRET_KEY
+      value: "local-development-key-change-in-production"
+    - name: GEMINI_API_KEY
+      value: "your-local-gemini-key-here"
+    - name: ENV
+      value: "development"
+
+# Enable ingress for local development
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+  hosts:
+    - host: todo.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Resource limits for local development
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Disable autoscaling for local development
+autoscaling:
+  enabled: false

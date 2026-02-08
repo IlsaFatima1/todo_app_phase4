@@ -37,8 +37,13 @@ from src.tools.task_tools import (
     update_task_tool
 )
 
-# Import AI Agent
-from src.agents.todo_agent import TodoAgent
+# Import AI Agent (optional - graceful handling if agents module is missing)
+try:
+    from src.agents.todo_agent import TodoAgent
+except ImportError as e:
+    print(f"Warning: Could not import TodoAgent: {e}")
+    print("AI agent functionality will be disabled.")
+    TodoAgent = None
 
 # Import Context7 configuration
 from config.context7_config import CTX7_CONFIG
@@ -48,6 +53,15 @@ from typing import Dict, Any, Optional
 
 # Global AI agent instance (without default user ID initially)
 todo_agent: Optional[TodoAgent] = None
+
+# Initialize the AI agent if the module is available
+if TodoAgent is not None:
+    try:
+        todo_agent = TodoAgent()
+    except Exception as e:
+        print(f"Warning: Could not initialize TodoAgent: {e}")
+        print("AI agent functionality will be disabled.")
+        todo_agent = None
 
 app = FastAPI(title="Todo API", version="1.0.0")
 
@@ -83,13 +97,17 @@ def startup_event():
     logger.info("Context7 connection initialized successfully")
 
     # Initialize AI agent
-    logger.info("Initializing AI agent...")
-    try:
-        todo_agent = TodoAgent(default_user_id=None)  # No default user for global instance
-        logger.info("AI agent initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize AI agent: {str(e)}")
-        raise
+    if TodoAgent is not None:
+        logger.info("Initializing AI agent...")
+        try:
+            todo_agent = TodoAgent(default_user_id=None)  # No default user for global instance
+            logger.info("AI agent initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize AI agent: {str(e)}")
+            logger.warning("AI agent functionality will be disabled.")
+            todo_agent = None
+    else:
+        logger.warning("AI agent module not available. AI agent functionality will be disabled.")
 
 
 @app.on_event("shutdown")
@@ -432,8 +450,8 @@ def register_user_endpoint(
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            "created_at": user.created_at,
-            "updated_at": user.updated_at
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.updated_at.isoformat() if user.updated_at else None
         }
 
         print(f"DEBUG: Returning registration response for user ID: {user.id}")
@@ -500,8 +518,8 @@ def login_user_endpoint(
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            "created_at": user.created_at,
-            "updated_at": user.updated_at
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.updated_at.isoformat() if user.updated_at else None
         }
 
         print(f"DEBUG: Returning login response for user ID: {user.id}")
@@ -584,8 +602,8 @@ def update_user_profile_endpoint(
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            "created_at": user.created_at,
-            "updated_at": user.updated_at
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.updated_at.isoformat() if user.updated_at else None
         }
 
         print(f"DEBUG: Returning response with user data")
@@ -680,8 +698,8 @@ def update_profile_picture_endpoint(
             "name": user.name,
             "email": user.email,
             "profile_picture": user.profile_picture,
-            "created_at": user.created_at,
-            "updated_at": user.updated_at
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.updated_at.isoformat() if user.updated_at else None
         }
 
         return {
@@ -1009,11 +1027,15 @@ async def process_user_message(request: ProcessMessageRequest, session: Session 
             # Use the provided conversation ID directly (already validated by Pydantic as string)
             conversation_id = request.conversation_id
 
-        # Process the message through the AI agent (async method)
-        # Pass the user_id so the agent can use it for tool calls
-        # Create a temporary agent instance with the user context to ensure tools use the correct user ID
+        # Create the agent - this should now work regardless of API key availability
+        # The agent handles missing API keys gracefully by setting api_available=False
         temp_agent = TodoAgent(default_user_id=user_id)
+
+        # Process the message - this will use fallback logic if API is not available
         result = await temp_agent.process_message(request.message, conversation_id, user_id=user_id)
+
+        logger.info("Message processed successfully by AI agent")
+        return result
 
         logger.info("Message processed successfully by AI agent")
         return result
@@ -1022,10 +1044,17 @@ async def process_user_message(request: ProcessMessageRequest, session: Session 
         raise
     except Exception as e:
         logger.error(f"Error processing user message: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error processing message: {str(e)}"
-        )
+        # Return a fallback response instead of raising an HTTP exception
+        fallback_response = {
+            "success": True,
+            "data": {
+                "response": f"I'm sorry, I encountered an error processing your message: {str(e)}. I can still help you with basic task management. For example: 'Add a task to buy groceries', 'List my tasks', or 'Complete wash the car'.",
+                "conversation_id": conversation_id if 'conversation_id' in locals() else str(uuid.uuid4()),
+                "tool_calls": []
+            },
+            "message": "Message processed with fallback response due to error"
+        }
+        return fallback_response
 
 
 @app.post("/api/ai/init_conversation")

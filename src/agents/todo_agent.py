@@ -181,50 +181,57 @@ class TodoAgent:
         # Initialize OpenAI-compatible client for Gemini
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            raise TodoAIError("GEMINI_API_KEY environment variable not set")
+            # Instead of raising an error, set a flag indicating API is not available
+            self.api_available = False
+            logger.warning("GEMINI_API_KEY environment variable not set. AI features will be disabled.")
+        else:
+            self.api_available = True
+            try:
+                self.client = AsyncOpenAI(
+                    api_key=api_key,
+                    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",  # Gemini API endpoint
+                )
 
-        self.client = AsyncOpenAI(
-            api_key=api_key,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",  # Gemini API endpoint
-        )
+                # Create model configuration for Gemini
+                self.model = OpenAIChatCompletionsModel(  # Using the correct model class name from documentation
+                    model="gemini-2.5-flash",  # Using a Gemini model
+                    openai_client=self.client,
+                )
 
-        # Create model configuration for Gemini
-        self.model = OpenAIChatCompletionsModel(  # Using the correct model class name from documentation
-            model="gemini-2.5-flash",  # Using a Gemini model
-            openai_client=self.client,
-        )
+                # Create run configuration
+                self.config = RunConfig(
+                    model=self.model,
+                    model_provider=self.client,
+                    tracing_disabled=True,  # Set to False for debugging
+                )
 
-        # Create run configuration
-        self.config = RunConfig(
-            model=self.model,
-            model_provider=self.client,
-            tracing_disabled=True,  # Set to False for debugging
-        )
+                # Create the agent with instructions and tools
+                # We'll create dynamic tools that can use the default user ID
+                self.agent = Agent(
+                    name="TodoAssistant",
+                    instructions=(
+                        "You are a helpful assistant for managing tasks. "
+                        "Use the available tools to help the user manage their tasks. "
+                        "NEVER ask for task IDs. Always find tasks by their title/name. "
+                        "Use the delete_task_with_context, complete_task_with_context, and update_task_with_context tools "
+                        "which take task names, not IDs. "
+                        "Only call functions when needed based on user requests. "
+                        "Always respond to the user in a friendly, helpful manner."
+                    ),
+                    tools=[
+                        self._create_add_task_tool(),
+                        self._create_list_tasks_tool(),
+                        self._create_complete_task_tool(),
+                        self._create_delete_task_tool(),
+                        self._create_update_task_tool()
+                    ],
+                )
+            except Exception as e:
+                logger.error(f"Error initializing AI client: {str(e)}")
+                self.api_available = False
 
         # Store the default user ID for context
         self.default_user_id = default_user_id
-
-        # Create the agent with instructions and tools
-        # We'll create dynamic tools that can use the default user ID
-        self.agent = Agent(
-            name="TodoAssistant",
-            instructions=(
-                "You are a helpful assistant for managing tasks. "
-                "Use the available tools to help the user manage their tasks. "
-                "NEVER ask for task IDs. Always find tasks by their title/name. "
-                "Use the delete_task_with_context, complete_task_with_context, and update_task_with_context tools "
-                "which take task names, not IDs. "
-                "Only call functions when needed based on user requests. "
-                "Always respond to the user in a friendly, helpful manner."
-            ),
-            tools=[
-                self._create_add_task_tool(),
-                self._create_list_tasks_tool(),
-                self._create_complete_task_tool(),
-                self._create_delete_task_tool(),
-                self._create_update_task_tool()
-            ],
-        )
 
     def _create_add_task_tool(self):
         """Create add task tool with user context"""

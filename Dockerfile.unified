@@ -1,0 +1,83 @@
+# Multi-stage build for a unified Todo App container
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+RUN npm install
+
+# Copy frontend source and build
+COPY frontend/ ./
+RUN npm run build
+
+# Install Next.js standalone server dependencies
+RUN npm install --production
+
+# Backend builder stage
+FROM python:3.10-slim AS backend-builder
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy backend requirements and install
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy backend source
+COPY backend/ ./
+COPY src/ ./src/
+
+# Production stage - combining all services
+FROM ubuntu:22.04
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv \
+    nodejs npm \
+    postgresql postgresql-contrib \
+    dumb-init \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root users
+RUN groupadd -g 1001 appuser && \
+    useradd -u 1001 -g appuser -m appuser
+
+# Set up PostgreSQL
+RUN mkdir -p /var/lib/postgresql/data && \
+    chown -R postgres:postgres /var/lib/postgresql
+RUN echo "local all all trust\nhost all all 127.0.0.1/32 md5" > /etc/postgresql/*/main/pg_hba.conf
+
+# Copy built frontend
+COPY --from=frontend-builder --chown=appuser:appuser /app /opt/frontend
+WORKDIR /opt/frontend
+
+# Copy built backend
+COPY --from=backend-builder --chown=appuser:appuser /app /opt/backend
+WORKDIR /opt/backend
+
+# Create app directory for source files
+RUN mkdir -p /opt/src && chown -R appuser:appuser /opt
+COPY --chown=appuser:appuser src/ /opt/src/
+
+# Set up PostgreSQL directories
+RUN mkdir -p /var/run/postgresql && chown postgres:postgres /var/run/postgresql
+
+# Expose ports
+EXPOSE 3000 7860 5432
+
+# Create startup script
+RUN chmod +x /opt/backend/main.py
+
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Use dumb-init as the entrypoint
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["/usr/local/bin/docker-entrypoint.sh"]

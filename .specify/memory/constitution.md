@@ -1,55 +1,48 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Containerization of Cloud-Native Todo Chatbot Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Reliability through validated container builds
+Container builds must be reliable and reproducible across environments; All Docker builds must pass validation checks; Consistent build processes ensure predictable outcomes
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Clarity for DevOps and cloud-native learners
+All containerization processes must be well-documented and clear; Container configurations must be understandable by team members; Learning-focused approach to container adoption
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Reproducibility of Docker images and environments
+Container builds must produce identical results across different machines; Build environments must be consistent and documented; Version control for all container configurations required
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. AI-assisted optimization using Docker AI (Gordon)
+Gordon AI must be utilized for container optimization insights; Build processes should incorporate AI recommendations; Continuous improvement through AI analysis
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Security-first container practices
+All containers must follow security best practices; Base images must be scanned for vulnerabilities; Security scanning integrated into build pipeline
 
-### [PRINCIPLE_6_NAME]
+### VI. Efficiency and Performance
 
+Container images must be optimized for size and performance; Multi-stage builds preferred to minimize attack surface; Resource constraints properly configured
 
-[PRINCIPLE__DESCRIPTION]
+## Additional Constraints and Standards
+- Must support both frontend and backend services
+- Base images must be official and lightweight
+- Image size optimization required
+- No hardcoded credentials
+- Must run on Windows-based Docker Desktop
+- All Dockerfiles must follow best practices
+- Images must be buildable on Docker Desktop 4.53+
+- Gordon must be used for build analysis and optimization
+- Multi-stage builds preferred where applicable
+- Containers must run without manual fixes
+- Logs and errors must be traceable and documented
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
-
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+- Container builds must be tested before merging
+- Image tagging follows semantic versioning
+- Docker Compose for local development
+- CI/CD pipeline for container deployment
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+- Constitution supersedes all other containerization practices
+- Amendments require documentation and team approval
+- All container changes must comply with security standards
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-01-27 | **Last Amended**: 2026-01-27

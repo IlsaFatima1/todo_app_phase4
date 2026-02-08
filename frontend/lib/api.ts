@@ -1,7 +1,7 @@
 import { Todo, CreateTodoRequest, UpdateTodoRequest, TodoApiResponse } from '@/types/todo';
 
 // API functions for connecting to the Python backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7860";
 
 // Function to add headers to requests
 const getHeaders = (includeAuth: boolean = true): { [key: string]: string } => {
