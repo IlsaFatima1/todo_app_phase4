@@ -1,23 +1,10 @@
-FROM node:18-alpine AS frontend-builder
-
-WORKDIR /frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend .
-RUN npm run build
-
-FROM python:3.10-slim
+FROM python:3.12-alpine
 
 WORKDIR /app
 
-COPY backend/requirements.txt .
-ENV PIP_DEFAULT_TIMEOUT=1000
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
-
+RUN pip install -r requirements.txt
 
 COPY backend .
-
 COPY --from=frontend-builder /frontend/.next /app/.next
 COPY --from=frontend-builder /frontend/public /app/public
 COPY --from=frontend-builder /frontend/package.json /app/package.json
