@@ -7,6 +7,10 @@ import uvicorn
 import logging
 from datetime import datetime
 from sqlmodel import select
+from dotenv import load_dotenv
+load_dotenv()
+
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +57,7 @@ from typing import Dict, Any, Optional
 
 # Global AI agent instance (without default user ID initially)
 todo_agent: Optional[TodoAgent] = None
+
 
 # Initialize the AI agent if the module is available
 if TodoAgent is not None:
@@ -886,6 +891,42 @@ def update_task_mcp(arguments: Dict[str, Any]):
         )
 
 
+@app.get("/api/debug/all_tasks")
+def debug_all_tasks(session: Session = Depends(get_session)):
+    """
+    Debug endpoint to see all tasks in database with their user IDs
+    """
+    from models import Todo
+    from sqlmodel import select
+
+    try:
+        todos = session.exec(select(Todo)).all()
+        result = []
+        for todo in todos:
+            result.append({
+                "id": todo.id,
+                "title": todo.title,
+                "user_id": todo.user_id,
+                "completed": todo.completed
+            })
+
+        return {
+            "success": True,
+            "data": {
+                "tasks": result,
+                "count": len(result)
+            },
+            "message": f"Found {len(result)} total tasks in database"
+        }
+    except Exception as e:
+        logger.error(f"Error in debug endpoint: {str(e)}")
+        return {
+            "success": False,
+            "data": None,
+            "message": f"Error: {str(e)}"
+        }
+
+
 @app.get("/api/mcp/health")
 def mcp_health_check():
     """
@@ -1012,11 +1053,13 @@ async def process_user_message(request: ProcessMessageRequest, session: Session 
     from models import User, Conversation, Message, SenderType, MessageType
 
     logger.info(f"Processing user message: {request.message[:50]}...")
+    logger.info(f"Authenticated user_id from token: {current_user_id}")
 
     try:
         # Use the authenticated user ID instead of the one from the request
         # This ensures that users can only access their own conversations
         user_id = current_user_id
+        logger.info(f"Using user_id for agent: {user_id}")
 
         # Get or create conversation
         if not request.conversation_id:
@@ -1029,13 +1072,13 @@ async def process_user_message(request: ProcessMessageRequest, session: Session 
 
         # Create the agent - this should now work regardless of API key availability
         # The agent handles missing API keys gracefully by setting api_available=False
+        logger.info(f"Creating TodoAgent with default_user_id={user_id}")
         temp_agent = TodoAgent(default_user_id=user_id)
+        logger.info(f"TodoAgent created, default_user_id is: {temp_agent.default_user_id}")
 
         # Process the message - this will use fallback logic if API is not available
+        logger.info(f"Calling process_message with user_id={user_id}")
         result = await temp_agent.process_message(request.message, conversation_id, user_id=user_id)
-
-        logger.info("Message processed successfully by AI agent")
-        return result
 
         logger.info("Message processed successfully by AI agent")
         return result
