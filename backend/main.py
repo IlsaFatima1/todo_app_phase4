@@ -16,7 +16,8 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from models import TodoCreate, TodoUpdate, TodoComplete, TodoRead, UserCreate, User
+from backend.models.todo import TodoCreate, TodoUpdate, TodoComplete, TodoRead
+from backend.models.user import UserCreate, User
 from schemas import Todo
 from database import get_session
 from crud import get_todos, create_todo, update_todo, delete_todo, complete_todo

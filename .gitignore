@@ -55,8 +55,8 @@ logs/
 .env.production
 .env.test
 /backend/.env
+backend/venv/
 
-backend/venv
 
 # Testing
 .coverage*
